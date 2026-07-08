@@ -1,0 +1,8 @@
+US Accidents Dataset - Data Quality Report
+==================================================
+Rows: 10000
+Columns: 81
+Duplicate Records: 0
+Invalid Coordinates: 0
+Memory Usage: 16.62 MB
+Engineered Features: 30
