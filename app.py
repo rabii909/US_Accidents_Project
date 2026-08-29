@@ -6,7 +6,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
 
 # ============================================================
@@ -261,7 +260,6 @@ st.markdown(
             600;
     }
 
-
     </style>
     """,
     unsafe_allow_html=True
@@ -304,7 +302,7 @@ df = load_data()
 
 
 # ============================================================
-# SIDEBAR
+# SIDEBAR HEADER
 # ============================================================
 
 st.sidebar.markdown(
@@ -320,43 +318,21 @@ st.sidebar.markdown(
 
 st.sidebar.markdown("---")
 
+# ============================================================
+# NAVIGATION
+# ============================================================
+
+st.sidebar.markdown("## 🧭 Navigation")
 
 page = st.sidebar.radio(
-    "NAVIGATION",
+    "",
     [
         "🏠 Dashboard",
         "🔎 Data Explorer",
         "📊 Project Overview"
-    ]
+    ],
+    label_visibility="collapsed"
 )
-
-
-st.sidebar.markdown("---")
-
-
-st.sidebar.markdown(
-    """
-    ### ⚙️ Data Pipeline
-
-    ✓ Data Cleaning
-
-    ✓ Data Validation
-
-    ✓ Feature Engineering
-
-    ✓ Encoding
-
-    ✓ Scaling
-    """
-)
-
-
-st.sidebar.markdown("---")
-
-st.sidebar.caption(
-    "Professional Data Engineering Project"
-)
-
 
 # ============================================================
 # FILTER FUNCTION
@@ -366,10 +342,15 @@ def apply_filters(data):
 
     filtered_data = data.copy()
 
+    # ========================================================
+    # FILTERS HEADER
+    # ========================================================
+
     st.sidebar.markdown("## 🎛️ Filters")
 
+
     # --------------------------------------------------------
-    # STATE
+    # STATE FILTER
     # --------------------------------------------------------
 
     if "State" in filtered_data.columns:
@@ -396,7 +377,7 @@ def apply_filters(data):
 
 
     # --------------------------------------------------------
-    # SEVERITY
+    # SEVERITY FILTER
     # --------------------------------------------------------
 
     if "Severity" in filtered_data.columns:
@@ -421,7 +402,7 @@ def apply_filters(data):
 
 
     # --------------------------------------------------------
-    # YEAR
+    # YEAR FILTER
     # --------------------------------------------------------
 
     if "Start_Time" in filtered_data.columns:
@@ -448,6 +429,42 @@ def apply_filters(data):
 
 
     return filtered_data
+
+
+# ============================================================
+# APPLY FILTERS
+# ============================================================
+
+filtered_df = apply_filters(df)
+
+
+# ============================================================
+# DATA PIPELINE - NOW BELOW FILTERS
+# ============================================================
+
+st.sidebar.markdown("---")
+
+st.sidebar.markdown(
+    """
+    ### ⚙️ Data Pipeline
+
+    ✓ Data Cleaning
+
+    ✓ Data Validation
+
+    ✓ Feature Engineering
+
+    ✓ Encoding
+
+    ✓ Scaling
+    """
+)
+
+st.sidebar.markdown("---")
+
+st.sidebar.caption(
+    "Professional Data Engineering Project"
+)
 
 
 # ============================================================
@@ -479,13 +496,6 @@ if page == "🏠 Dashboard":
 
 
     # ========================================================
-    # APPLY FILTERS
-    # ========================================================
-
-    filtered_df = apply_filters(df)
-
-
-    # ========================================================
     # KPI CARDS
     # ========================================================
 
@@ -498,9 +508,7 @@ if page == "🏠 Dashboard":
             f"""
             <div class="kpi-card">
 
-            <div class="kpi-icon">
-            🚗
-            </div>
+            <div class="kpi-icon">🚗</div>
 
             <div class="kpi-label">
             Total Accidents
@@ -521,6 +529,7 @@ if page == "🏠 Dashboard":
         avg_severity = (
             filtered_df["Severity"].mean()
             if "Severity" in filtered_df.columns
+            and not filtered_df.empty
             else 0
         )
 
@@ -528,9 +537,7 @@ if page == "🏠 Dashboard":
             f"""
             <div class="kpi-card">
 
-            <div class="kpi-icon">
-            ⚠️
-            </div>
+            <div class="kpi-icon">⚠️</div>
 
             <div class="kpi-label">
             Average Severity
@@ -558,9 +565,7 @@ if page == "🏠 Dashboard":
             f"""
             <div class="kpi-card">
 
-            <div class="kpi-icon">
-            🗺️
-            </div>
+            <div class="kpi-icon">🗺️</div>
 
             <div class="kpi-label">
             States Covered
@@ -588,9 +593,7 @@ if page == "🏠 Dashboard":
             f"""
             <div class="kpi-card">
 
-            <div class="kpi-icon">
-            🏙️
-            </div>
+            <div class="kpi-icon">🏙️</div>
 
             <div class="kpi-label">
             Cities
@@ -616,10 +619,6 @@ if page == "🏠 Dashboard":
     col1, col2 = st.columns(2)
 
 
-    # --------------------------------------------------------
-    # ACCIDENT TRENDS
-    # --------------------------------------------------------
-
     with col1:
 
         st.markdown(
@@ -627,7 +626,10 @@ if page == "🏠 Dashboard":
             unsafe_allow_html=True
         )
 
-        if "Start_Time" in filtered_df.columns:
+        if (
+            "Start_Time" in filtered_df.columns
+            and not filtered_df.empty
+        ):
 
             trend_data = (
                 filtered_df
@@ -647,32 +649,25 @@ if page == "🏠 Dashboard":
                 .reset_index(name="Accidents")
             )
 
-            fig = px.line(
-                trend_data,
-                x="Year",
-                y="Accidents",
-                markers=True
-            )
+            if not trend_data.empty:
 
-            fig.update_layout(
-                height=350,
-                margin=dict(
-                    l=20,
-                    r=20,
-                    t=20,
-                    b=20
+                fig = px.line(
+                    trend_data,
+                    x="Year",
+                    y="Accidents",
+                    markers=True
                 )
-            )
 
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
+                fig.update_layout(
+                    height=350,
+                    margin=dict(l=20, r=20, t=20, b=20)
+                )
 
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
 
-    # --------------------------------------------------------
-    # SEVERITY DISTRIBUTION
-    # --------------------------------------------------------
 
     with col2:
 
@@ -681,7 +676,10 @@ if page == "🏠 Dashboard":
             unsafe_allow_html=True
         )
 
-        if "Severity" in filtered_df.columns:
+        if (
+            "Severity" in filtered_df.columns
+            and not filtered_df.empty
+        ):
 
             severity_data = (
                 filtered_df["Severity"]
@@ -704,12 +702,7 @@ if page == "🏠 Dashboard":
 
             fig.update_layout(
                 height=350,
-                margin=dict(
-                    l=20,
-                    r=20,
-                    t=20,
-                    b=20
-                )
+                margin=dict(l=20, r=20, t=20, b=20)
             )
 
             st.plotly_chart(
@@ -725,10 +718,6 @@ if page == "🏠 Dashboard":
     col1, col2 = st.columns(2)
 
 
-    # --------------------------------------------------------
-    # ACCIDENTS BY STATE
-    # --------------------------------------------------------
-
     with col1:
 
         st.markdown(
@@ -736,7 +725,10 @@ if page == "🏠 Dashboard":
             unsafe_allow_html=True
         )
 
-        if "State" in filtered_df.columns:
+        if (
+            "State" in filtered_df.columns
+            and not filtered_df.empty
+        ):
 
             state_data = (
                 filtered_df["State"]
@@ -759,12 +751,7 @@ if page == "🏠 Dashboard":
 
             fig.update_layout(
                 height=400,
-                margin=dict(
-                    l=20,
-                    r=20,
-                    t=20,
-                    b=20
-                )
+                margin=dict(l=20, r=20, t=20, b=20)
             )
 
             st.plotly_chart(
@@ -773,10 +760,6 @@ if page == "🏠 Dashboard":
             )
 
 
-    # --------------------------------------------------------
-    # WEATHER CONDITIONS
-    # --------------------------------------------------------
-
     with col2:
 
         st.markdown(
@@ -784,7 +767,10 @@ if page == "🏠 Dashboard":
             unsafe_allow_html=True
         )
 
-        if "Weather_Condition" in filtered_df.columns:
+        if (
+            "Weather_Condition" in filtered_df.columns
+            and not filtered_df.empty
+        ):
 
             weather_data = (
                 filtered_df["Weather_Condition"]
@@ -827,6 +813,7 @@ if page == "🏠 Dashboard":
     if (
         "Start_Lat" in filtered_df.columns
         and "Start_Lng" in filtered_df.columns
+        and not filtered_df.empty
     ):
 
         map_data = (
@@ -844,7 +831,9 @@ if page == "🏠 Dashboard":
             }
         )
 
-        st.map(map_data)
+        if not map_data.empty:
+
+            st.map(map_data)
 
 
     # ========================================================
@@ -891,7 +880,7 @@ if page == "🏠 Dashboard":
 
 
     # ========================================================
-    # INSIGHTS
+    # KEY INSIGHTS
     # ========================================================
 
     st.markdown(
@@ -924,7 +913,10 @@ if page == "🏠 Dashboard":
 
     with insight_col2:
 
-        if "State" in filtered_df.columns:
+        if (
+            "State" in filtered_df.columns
+            and not filtered_df.empty
+        ):
 
             top_state = (
                 filtered_df["State"]
@@ -952,7 +944,10 @@ if page == "🏠 Dashboard":
 
     with insight_col3:
 
-        if "Severity" in filtered_df.columns:
+        if (
+            "Severity" in filtered_df.columns
+            and not filtered_df.empty
+        ):
 
             highest_severity = (
                 filtered_df["Severity"]
@@ -995,24 +990,24 @@ elif page == "🔎 Data Explorer":
     st.title("🔎 Data Explorer")
 
     st.write(
-        "Explore and analyze the processed accident dataset."
+        "Explore and analyze the filtered accident dataset."
     )
 
     col1, col2, col3 = st.columns(3)
 
     col1.metric(
         "Rows",
-        f"{len(df):,}"
+        f"{len(filtered_df):,}"
     )
 
     col2.metric(
         "Columns",
-        len(df.columns)
+        len(filtered_df.columns)
     )
 
     col3.metric(
         "Missing Values",
-        f"{df.isnull().sum().sum():,}"
+        f"{filtered_df.isnull().sum().sum():,}"
     )
 
 
@@ -1021,15 +1016,15 @@ elif page == "🔎 Data Explorer":
 
     selected_columns = st.multiselect(
         "Select Columns",
-        options=df.columns.tolist(),
-        default=df.columns.tolist()[:10]
+        options=filtered_df.columns.tolist(),
+        default=filtered_df.columns.tolist()[:10]
     )
 
 
     if selected_columns:
 
         st.dataframe(
-            df[selected_columns],
+            filtered_df[selected_columns],
             use_container_width=True,
             height=500
         )
@@ -1039,9 +1034,11 @@ elif page == "🔎 Data Explorer":
 
 
     st.download_button(
-        "⬇️ Download Data Sample",
-        data=df.head(10000).to_csv(index=False),
-        file_name="US_Accidents_sample.csv",
+        "⬇️ Download Filtered Data Sample",
+        data=filtered_df.head(10000).to_csv(
+            index=False
+        ),
+        file_name="US_Accidents_filtered_sample.csv",
         mime="text/csv"
     )
 
