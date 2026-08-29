@@ -1,9 +1,11 @@
 # 1: Import Libraries
+
 import pandas as pd
 import numpy as np
 
 
 # 2: Feature Engineering Function
+
 def feature_engineering(df):
 
     print("Feature Engineering Started...")
@@ -26,14 +28,8 @@ def feature_engineering(df):
     # Feature 1 — Hour
     df["Hour"] = df["Start_Time"].dt.hour
 
-    # Check:
-    print(df[["Start_Time", "Hour"]].head())
-
     # Feature 2 — Day
     df["Day"] = df["Start_Time"].dt.day
-
-    # Check:
-    print(df["Day"].head())
 
     # Feature 3 — Month
     df["Month"] = df["Start_Time"].dt.month
@@ -48,12 +44,6 @@ def feature_engineering(df):
     df["Weekend_Flag"] = df["Weekday"].isin([5, 6]).astype(int)
 
     # Feature 7 — Rush Hour Indicator
-
-    # Morning:
-    # 7–9
-
-    # Evening:
-    # 4–6 PM
     df["Rush_Hour"] = (
         ((df["Hour"] >= 7) & (df["Hour"] <= 9)) |
         ((df["Hour"] >= 16) & (df["Hour"] <= 18))
@@ -65,7 +55,7 @@ def feature_engineering(df):
         (df["Hour"] >= 20)
     ).astype(int)
 
-    # Feature 9 — Holiday Indicator
+    # Feature 9 — Holiday Indicator   
     df["Holiday"] = 0
 
     # Check the features
@@ -81,48 +71,52 @@ def feature_engineering(df):
         "Holiday"
     ]].head())
 
-    # Part B – Weather Features
+    # PART B — Weather Features
 
-    # Step 1
-    # Feature 10 – Temperature Category
+    # Feature 10 — Temperature Category
     df["Temperature_Category"] = pd.cut(
         df["Temperature(F)"],
-        bins=[-100, 32, 60, 80, 150],
-        labels=["Freezing", "Cold", "Moderate", "Hot"]
-    )
+        bins=[-float("inf"), 32, 60, 80, float("inf")],
+        labels=[
+        "Freezing",
+        "Cold",
+        "Moderate",
+        "Hot"
+    ]
+).astype("object").fillna("Unknown")
 
-    # Step 2 - Check the output
-    print(df[["Temperature(F)", "Temperature_Category"]].head())
 
-    # Feature 11 – Visibility Category
+    # Feature 11 — Visibility Category
     df["Visibility_Category"] = pd.cut(
-        df["Visibility(mi)"],
-        bins=[0, 2, 5, 10, 100],
-        labels=["Poor", "Low", "Good", "Excellent"]
-    )
+     df["Visibility(mi)"],
+    bins=[-float("inf"), 2, 5, 10, float("inf")],
+    labels=[
+        "Poor",
+        "Low",
+        "Good",
+        "Excellent"
+    ]
+).astype("object").fillna("Unknown")
 
-    # Check
-    print(df[["Visibility(mi)", "Visibility_Category"]].head())
 
-    # Feature 12 – Wind Category
+    # Feature 12 — Wind Category
     df["Wind_Category"] = pd.cut(
         df["Wind_Speed(mph)"],
-        bins=[0, 10, 20, 40, 200],
-        labels=["Calm", "Moderate", "Strong", "Very Strong"]
-    )
+    bins=[-float("inf"), 10, 20, 40, float("inf")],
+    labels=[
+        "Calm",
+        "Moderate",
+        "Strong",
+        "Very Strong"
+    ]
+).astype("object").fillna("Unknown")
 
-    # Check
-    print(df[["Wind_Speed(mph)", "Wind_Category"]].head())
-
-    # Feature 13 – Rain Indicator
+    # Feature 13 — Rain Indicator
     df["Rain_Indicator"] = (
         df["Precipitation(in)"] > 0
     ).astype(int)
 
-    # Check
-    print(df[["Precipitation(in)", "Rain_Indicator"]].head())
-
-    # Feature 14 – Severe Weather Indicator
+    # Feature 14 — Severe Weather Indicator
     severe_weather = [
         "Thunderstorm",
         "Heavy Rain",
@@ -142,93 +136,64 @@ def feature_engineering(df):
         )
     ).astype(int)
 
-    # Check
-    print(df[["Weather_Condition", "Severe_Weather"]].head())
-
-    # Feature 15 – State Frequency
-
-    # Step 1
+    # Feature 15 — State Frequency
     state_freq = df["State"].value_counts()
 
-    df["State_Frequency"] = df["State"].map(state_freq)
-
-    # Step 2: Check the output
-    print(df[["State", "State_Frequency"]].head())
-    
-        # Feature 16 – City Frequency
-
-    # Step 1
-    city_freq = df["City"].value_counts()
-
-    df["City_Frequency"] = df["City"].map(city_freq)
-
-    # Check
-    print(df[["City", "City_Frequency"]].head())
-
-    # Feature 17 – Distance Category
-
-    # Step 1
-    df["Distance_Category"] = pd.cut(
-        df["Distance(mi)"],
-        bins=[0, 1, 5, 10, 1000],
-        labels=["Short", "Medium", "Long", "Very Long"]
+    df["State_Frequency"] = df["State"].map(
+        state_freq
     )
 
-    # Step 2
-    print(df[["Distance(mi)", "Distance_Category"]].head())
+    # Feature 16 — City Frequency
+    city_freq = df["City"].value_counts()
 
-    # Feature 18 – Urban/Rural Flag
+    df["City_Frequency"] = df["City"].map(
+        city_freq
+    )
 
-    # Step 1
+    # Feature 17 — Distance Category
+    df["Distance_Category"] = pd.cut(
+        df["Distance(mi)"],
+        bins=[-1, 1, 5, 10, float("inf")],
+        labels=[
+            "Short",
+            "Medium",
+            "Long",
+            "Very Long"
+        ]
+    )
+
+    # Fill missing distance categories
+    df["Distance_Category"] = (
+        df["Distance_Category"]
+        .astype("object")
+        .fillna("Unknown")
+    )
+
+    # Feature 18 — Urban/Rural Flag
     median_city_freq = df["City_Frequency"].median()
 
     df["Urban_Rural"] = (
         df["City_Frequency"] > median_city_freq
     ).astype(int)
 
-    # Step 2
-    print(df[["City", "City_Frequency", "Urban_Rural"]].head())
-
-    # Feature 19 - State Code Length
-
-    # Step 1
+    # Feature 19 — State Code Length
     df["State_Code_Length"] = (
         df["State"]
         .astype(str)
         .str.len()
     )
 
-    # Step 2
-    print(df[["State", "State_Code_Length"]].head())
-
-    # Feature 20 – Accident Duration (Minutes)
-
-    # Step 1
+    # Feature 20 — Accident Duration (Minutes)
     df["Accident_Duration_Min"] = (
         df["End_Time"] - df["Start_Time"]
     ).dt.total_seconds() / 60
 
-    # Step 2
-    print(df[[
-        "Start_Time",
-        "End_Time",
-        "Accident_Duration_Min"
-    ]].head())
+    # Feature 21 — Traffic Severity Score
+    df["Traffic_Severity_Score"] = (
+        df["Severity"] / 4
+    )
 
-    # Feature 21 – Traffic Severity Score
-
-    # Step 1
-    df["Traffic_Severity_Score"] = df["Severity"] / 4
-
-    # Step 2
-    print(df[[
-        "Severity",
-        "Traffic_Severity_Score"
-    ]].head())
-
-    # Feature 22 – Road Complexity Score
-
-    # Step 1
+    # Feature 22 — Road Complexity Score
     road_features = [
         "Crossing",
         "Junction",
@@ -243,15 +208,7 @@ def feature_engineering(df):
         .sum(axis=1)
     )
 
-    # Step 2
-    print(df[
-        road_features +
-        ["Road_Complexity_Score"]
-    ].head())
-
-    # Feature 23 – Traffic Control Score
-
-    # Step 1
+    # Feature 23 — Traffic Control Score
     traffic_control = [
         "Traffic_Signal",
         "Traffic_Calming",
@@ -264,15 +221,7 @@ def feature_engineering(df):
         .sum(axis=1)
     )
 
-    # Step 2
-    print(df[
-        traffic_control +
-        ["Traffic_Control_Score"]
-    ].head())
-
-    # Feature 24 - Road Hazard Score
-
-    # Step 1
+    # Feature 24 — Road Hazard Score
     hazard_features = [
         "Bump",
         "Give_Way",
@@ -286,60 +235,33 @@ def feature_engineering(df):
         .sum(axis=1)
     )
 
-    # Step 2
-    print(df[
-        hazard_features +
-        ["Road_Hazard_Score"]
-    ].head())
+    # PART E — Text Features
 
-    # Part E – Text Features
-
-    # Step 1
-    # Feature 25 - Description Length
+    # Feature 25 — Description Length
     df["Description_Length"] = (
         df["Description"]
         .astype(str)
         .str.len()
     )
 
-    # Step 2
-    print(df[[
-        "Description",
-        "Description_Length"
-    ]].head())
-
-    # Feature 26 - Word Count
-
-    # Step 1
+    # Feature 26 — Word Count
+    # Memory-efficient word counting
     df["Word_Count"] = (
         df["Description"]
-        .astype(str)
-        .str.split()
-        .str.len()
-    )
+        .astype("string")
+        .str.count(r"\S+")
+        .fillna(0)
+        .astype("int32")
+)
 
-    # Step 2
-    print(df[[
-        "Description",
-        "Word_Count"
-    ]].head())
-
-    # Feature 27 – Average Word Length
-
-    # Step 1
+    # Feature 27 — Average Word Length
+    # Feature 27 — Average Word Length
     df["Average_Word_Length"] = (
         df["Description_Length"] /
-        df["Word_Count"]
-    ).fillna(0)
+        df["Word_Count"].replace(0, np.nan)
+).fillna(0)
 
-    # Step 2
-    print(df[[
-        "Average_Word_Length"
-    ]].head())
-
-    # Feature 28 - Accident Keyword Indicator
-
-    # Step 1
+    # Feature 28 — Accident Keyword Indicator
     accident_keywords = [
         "accident",
         "crash",
@@ -358,15 +280,7 @@ def feature_engineering(df):
         )
     ).astype(int)
 
-    # Step 2
-    print(df[[
-        "Description",
-        "Accident_Keyword"
-    ]].head())
-
-    # Feature 29 - Weather Keyword Indicator
-
-    # Step 1
+    # Feature 29 — Weather Keyword Indicator
     weather_keywords = [
         "rain",
         "snow",
@@ -385,15 +299,7 @@ def feature_engineering(df):
         )
     ).astype(int)
 
-    # Step 2
-    print(df[[
-        "Description",
-        "Weather_Keyword"
-    ]].head())
-
-    # Feature 30 - Road Closure Keyword Indicator
-
-    # Step 1
+    # Feature 30 — Road Closure Keyword Indicator
     closure_keywords = [
         "closed",
         "blocked",
@@ -412,13 +318,6 @@ def feature_engineering(df):
         )
     ).astype(int)
 
-    # Step 2
-    print(df[[
-        "Description",
-        "Road_Closure_Keyword"
-    ]].head())
-
     print("Feature Engineering Completed Successfully!")
 
     return df
-
